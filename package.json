@@ -1,8 +1,15 @@
 {
     "name": "super-concert-magic",
     "version": "1.0.0",
+    "type": "module",
     "description": "",
     "main": "index.js",
     "author": "Uncodeable864",
-    "license": "AGPL-3.0-only"
+    "license": "AGPL-3.0-only",
+    "dependencies": {
+        "chalk": "^5.0.0",
+        "figlet": "^1.5.2",
+        "inquirer": "^8.2.0",
+        "nanospinner": "^1.0.0"
+    }
 }
