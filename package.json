@@ -3,6 +3,9 @@
     "version": "1.0.0",
     "type": "module",
     "description": "",
+    "scripts": {
+        "test": "clear; node ."
+    },
     "main": "index.js",
     "author": "Uncodeable864",
     "license": "AGPL-3.0-only",
@@ -10,6 +13,8 @@
         "chalk": "^5.0.0",
         "figlet": "^1.5.2",
         "inquirer": "^8.2.0",
+        "midi": "^2.0.0",
+        "midi-file": "^1.2.2",
         "nanospinner": "^1.0.0"
     }
 }

@@ -4,7 +4,88 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { createSpinner } from 'nanospinner';
-//  figlet
 import figlet from 'figlet';
 
-figlet('CANCION')
+import midi from 'midi';
+
+import { existsSync } from 'fs';
+
+const waitForInput = ((passThroughInput, closePort = true) => {
+    return new Promise((resolve, reject) => {
+
+        // passThroughInput.on('message', (deltaTime, message) => {
+
+        // resolve({ deltaTime, message });
+        if (closePort) passThroughInput.closePort()
+        resolve()
+            // });
+    })
+});
+const sleep = (ms = 2000) => new Promise((r) => setTimeout(r, ms));
+
+figlet('CANCION', (e, d) => {
+    if (e) {
+        console.log('CANCION: Better Concert Magic')
+    }
+
+    console.log(chalk.yellow(d));
+})
+
+await sleep(100)
+
+const { midiFileName } = await inquirer.prompt({
+    name: 'midiFileName',
+    type: 'input',
+    message: 'Enter the name of the midi file to play:',
+    default: 'cancion.midi',
+    validate: (input) => {
+        if (input.endsWith('.mid') || input.endsWith('.midi') && existsSync(input)) {
+            return true;
+        }
+        return 'Please enter a valid MIDI file';
+    }
+});
+
+if (!existsSync(midiFileName)) {
+    console.log(chalk.red('File not found'));
+    process.exit(1);
+} else {
+    console.log(`Loading ${chalk.cyan(midiFileName)}`);
+}
+
+const input = new midi.Input();
+
+if (input.getPortCount() === 0) {
+    console.log(chalk.red('No MIDI I/O devices found. Please connect one and try again.\n'));
+    process.exit(1);
+}
+let inputPortNames = [];
+for (let i = 0; i < input.getPortCount(); i++) {
+    inputPortNames.push(input.getPortName(i));
+}
+const { midiPort } = await inquirer.prompt({
+    name: 'midiPort',
+    type: 'list',
+    message: 'Select the MIDI port to use:',
+    choices: inputPortNames,
+    default: inputPortNames[0],
+});
+
+const midiPortIndex = inputPortNames.indexOf(midiPort);
+console.log(chalk.bgWhite.black(`Using MIDI port ${chalk.cyan(midiPort)}(Port ${chalk.cyan(midiPortIndex)}), on MIDI file ${chalk.cyan(midiFileName)}`));
+console.log('To verify the MIDI port, please connect the MIDI device and press any key on the keyboard.');
+
+input.openPort(0);
+const spinner = createSpinner('Run test')
+spinner.start()
+await waitForInput(input);
+spinner.stop()
+input.closePort()
+console.log(chalk.green('Connection established!'));
+const { mode } = await inquirer.prompt({
+    name: 'mode',
+    type: 'list',
+    message: 'Select the mode to use:',
+    choices: ['Timed Play: Completly autonomous MIDI playback', 'Note-by-Note Play: Maps each note on the MIDI file to each each note you play for a realalistic conert experiance'],
+    default: 'Note-by-Note Play',
+});
