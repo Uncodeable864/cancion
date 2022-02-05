@@ -9,6 +9,7 @@ import figlet from 'figlet';
 import midi from 'midi';
 
 import { existsSync } from 'fs';
+import { timed } from './timed.js';
 
 const waitForInput = ((passThroughInput, closePort = true) => {
     return new Promise((resolve, reject) => {
@@ -39,7 +40,7 @@ const { midiFileName } = await inquirer.prompt({
     message: 'Enter the name of the midi file to play:',
     default: 'cancion.midi',
     validate: (input) => {
-        if (input.endsWith('.mid') || input.endsWith('.midi') && existsSync(input)) {
+        if (input.endsWith('.mid') || input.endsWith('.midi') || input.endsWith('.mid"') || input.endsWith('.midi"')) {
             return true;
         }
         return 'Please enter a valid MIDI file';
@@ -75,17 +76,33 @@ const midiPortIndex = inputPortNames.indexOf(midiPort);
 console.log(chalk.bgWhite.black(`Using MIDI port ${chalk.cyan(midiPort)}(Port ${chalk.cyan(midiPortIndex)}), on MIDI file ${chalk.cyan(midiFileName)}`));
 console.log('To verify the MIDI port, please connect the MIDI device and press any key on the keyboard.');
 
-input.openPort(0);
+input.openPort(midiPortIndex);
 const spinner = createSpinner('Run test')
 spinner.start()
 await waitForInput(input);
 spinner.stop()
 input.closePort()
 console.log(chalk.green('Connection established!'));
-const { mode } = await inquirer.prompt({
+let { mode } = await inquirer.prompt({
     name: 'mode',
     type: 'list',
     message: 'Select the mode to use:',
-    choices: ['Timed Play: Completly autonomous MIDI playback', 'Note-by-Note Play: Maps each note on the MIDI file to each each note you play for a realalistic conert experiance'],
-    default: 'Note-by-Note Play',
+    choices: ['Timed Play: Completly autonomous MIDI playback', 'Note-by-Note Play: Maps each note on the MIDI file to each each note you play for a faked concert experience'],
+    default: 'Timed Play: Completly autonomous MIDI playback',
 });
+
+if (mode === 'Timed Play: Completly autonomous MIDI playback') {
+    mode = "Timed Play";
+} else {
+    mode = "Note-by-Note Play";
+}
+
+const { repeat } = await inquirer.prompt({
+    name: 'repeat',
+    type: 'confirm',
+    message: 'Put MIDI file in a loop?',
+    default: true,
+});
+
+console.log(`Using mode ${chalk.cyan(mode)}`);
+await timed(midiFileName, midiPortIndex, midiPort, repeat);
