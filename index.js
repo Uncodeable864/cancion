@@ -14,12 +14,12 @@ import { timed } from './timed.js';
 const waitForInput = ((passThroughInput, closePort = true) => {
     return new Promise((resolve, reject) => {
 
-        // passThroughInput.on('message', (deltaTime, message) => {
+        passThroughInput.on('message', (deltaTime, message) => {
 
-        // resolve({ deltaTime, message });
-        if (closePort) passThroughInput.closePort()
-        resolve()
-            // });
+            resolve({ deltaTime, message });
+            if (closePort) passThroughInput.closePort()
+                // resolve()
+        });
     })
 });
 const sleep = (ms = 2000) => new Promise((r) => setTimeout(r, ms));

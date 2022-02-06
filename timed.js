@@ -44,8 +44,8 @@ export async function timed(midiFileName, midiPortIndex, midiPort, repeat = true
             return 'Please enter a valid number';
         }
     });
-    const ticksPerBeat = midiObject.header.ticksPerBeat;
-    const ticksPerSecond = ticksPerBeat * tempo;
+    // const ticksPerBeat = midiObject.header.ticksPerBeat;
+    // const ticksPerSecond = ticksPerBeat * tempo;
 
     console.log(chalk.bgWhite.black(`Using tempo ${chalk.cyan(tempo)}`));
 
@@ -72,21 +72,43 @@ export async function timed(midiFileName, midiPortIndex, midiPort, repeat = true
     if (repeat) console.log(chalk.blue('Press Ctrl+C to stop'));
 
     if (repeat) {
+        console.log('Playing song with repeat on')
+
+        while (true) {
+            for (let i = noteIndex; i < events.length; i++) {
+                const event = events[i];
+                if (event.type === 'noteOn' || event.type === 'noteOff') {
+                    // console.log(event);
+                    if (event.type === 'noteOn') {
+                        output.sendMessage([144, event.noteNumber, event.velocity]);
+                    } else if (event.type === 'noteOff') {
+                        output.sendMessage([128, event.noteNumber, event.velocity]);
+                    }
+                    let deltaTime = events[i + 1].deltaTime;
+                    let waitTimeInMiliseonds = deltaTime * (60000 / (tempo * midiObject.header.ticksPerBeat));
+                    await sleep(waitTimeInMiliseonds);
+                }
+            }
+            sleep(1000);
+        }
+
+    } else {
+        console.log('Playing song with repeat off')
+
         for (let i = noteIndex; i < events.length; i++) {
             const event = events[i];
             if (event.type === 'noteOn' || event.type === 'noteOff') {
-                console.log(event);
-                // if (event.type === 'noteOn') {
-                //     output.sendMessage([144, event.noteNumber, event.velocity]);
-                // } else if (event.type === 'noteOff') {
-                //     output.sendMessage([128, event.noteNumber, event.velocity]);
-                // }
+                // console.log(event);
+                if (event.type === 'noteOn') {
+                    output.sendMessage([144, event.noteNumber, event.velocity]);
+                } else if (event.type === 'noteOff') {
+                    output.sendMessage([128, event.noteNumber, event.velocity]);
+                }
                 let deltaTime = events[i + 1].deltaTime;
-                let waitTimeInMiliseonds = (tempo * deltaTime) / midiObject.header.ticksPerBeat;
+                let waitTimeInMiliseonds = deltaTime * (60000 / (tempo * midiObject.header.ticksPerBeat));
                 console.log(`Waiting ${chalk.cyan(waitTimeInMiliseonds)} miliseconds`);
                 await sleep(waitTimeInMiliseonds);
             }
         }
-
     }
 }
